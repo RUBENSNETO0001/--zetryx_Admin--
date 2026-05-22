@@ -1,0 +1,164 @@
+.tabela-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1.5px solid #e0dcd4;
+  box-shadow: 0 2px 16px rgba(92, 107, 192, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+
+.tabela-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+  padding: 0 20px;
+  height: 42px;
+  background: #1a1a2e;
+  align-items: center;
+  gap: 12px;
+}
+
+.tabela-th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #7876a0;
+}
+
+.tabela-th-center {
+  text-align: center;
+}
+
+.tabela-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tabela-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.tabela-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabela-body::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
+
+.tabela-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+  padding: 0 20px;
+  height: 52px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f0ede8;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tabela-row:hover {
+  background: #f7f5ff;
+}
+
+.tabela-row:last-child {
+  border-bottom: none;
+}
+
+.tabela-cell {
+  font-size: 13.5px;
+  color: #1a1a2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabela-cell-name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tabela-cell-sub {
+  font-size: 12px;
+  color: #7a7890;
+}
+
+.tabela-cell-muted {
+  font-size: 13px;
+  color: #7a7890;
+}
+
+.tabela-cell-center {
+  text-align: center;
+}
+
+/* Tags de status */
+.tabela-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tag-novo {
+  background: #d4edda;
+  color: #276749;
+}
+
+.tag-rev {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.tag-fin {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+/* Botão analisar */
+.tabela-action-btn {
+  background: none;
+  border: 1px solid #e0dcd4;
+  color: #7a7890;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tabela-action-btn:hover:not(:disabled) {
+  border-color: #5c6bc0;
+  color: #5c6bc0;
+  background: #f0f2ff;
+}
+
+.tabela-action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Estado vazio */
+.tabela-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #7a7890;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.tabela-empty-icon {
+  font-size: 36px;
+}

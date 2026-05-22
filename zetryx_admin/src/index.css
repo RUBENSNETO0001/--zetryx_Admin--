@@ -1,0 +1,25 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --text:           #94a3b8; 
+  --text-h:         #f0fdf4; 
+  --bg:             #060a07; 
+  --border:         #142217; 
+  --code-bg:        #0c140e;
+  --accent:         #4ade80; 
+  --accent-bg:      rgba(74, 222, 128, 0.1);
+  --accent-border:  rgba(74, 222, 128, 0.4);
+  --shadow:         rgba(0,0,0,.5) 0 10px 15px -3px, rgba(0,0,0,.3) 0 4px 6px -2px;
+  --raio:           10px;
+  --sans:           system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono:           ui-monospace, Consolas, monospace;
+}
+
+body {
+  font: 16px/1.6 var(--sans);
+  letter-spacing: .18px;
+  color: var(--text);
+  background: linear-gradient(135deg, #08131f 0%, #0b2233 40%, #2a124f 100%);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
