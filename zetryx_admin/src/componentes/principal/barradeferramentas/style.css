@@ -1,8 +1,10 @@
 .toolbar-root {
   display: flex;
-  align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  flex-direction: row-reverse;
+  align-items: center;
+  padding: 10px;
 }
 
 .toolbar-search-wrap {

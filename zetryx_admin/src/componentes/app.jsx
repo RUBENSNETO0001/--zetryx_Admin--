@@ -1,14 +1,42 @@
 import Sidebar from "./principal/painel/Painel";
 import Toolbar from "./principal/barradeferramentas/BarradeFerramentas";
-import Tabela from "./principal/campos_inscricoes/campos";
+import Tabela from "./principal/campos_inscricoes/Campos";
+import { useState, useEffect } from "react";
 
-const App = () => (
-  <div style={{ display: "flex", height: "100vh" }}>
-    <Sidebar />
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "24px 28px", gap: "18px" }}>
-      <Toolbar />
-      <Tabela />
+const App = () => {
+  const [dados, setDados] = useState([]);
+  const [filtro, setFiltro] = useState("Todos");
+  const [busca, setBusca] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/participantes")
+      .then(r => r.json())
+      .then(setDados)
+      .catch(err => console.error("Erro ao buscar participantes:", err));
+  }, []);
+
+  const contagens = {
+    Todos: dados.length,
+    Novo: dados.filter(d => d.status === "Novo").length,
+    Revisando: dados.filter(d => d.status === "Revisando").length,
+    Finalizado: dados.filter(d => d.status === "Finalizado").length,
+  };
+
+  const dadosFiltrados = dados.filter(d => {
+    const passaFiltro = filtro === "Todos" || d.status === filtro;
+    const passaBusca = d.nome_completo.toLowerCase().includes(busca.toLowerCase());
+    return passaFiltro && passaBusca;
+  });
+
+  return (
+    <div style={{ display: "flex", height: "100vh" }}>
+      <Sidebar ativo={filtro} setAtivo={setFiltro} contagens={contagens} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <Toolbar onBusca={setBusca} onExportar={() => {}} />
+        <Tabela dados={dadosFiltrados} setDados={setDados} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
 export default App;
