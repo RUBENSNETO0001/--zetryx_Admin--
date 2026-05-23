@@ -5,7 +5,7 @@ const proximoStatus = { Novo: "Revisando", Revisando: "Finalizado", Finalizado: 
 const tagClass = { Novo: "tag-novo", Revisando: "tag-rev", Finalizado: "tag-fin" };
 const tagDot = { Novo: "🟢", Revisando: "🟡", Finalizado: "🔵" };
 
-const Tabela = ({ dados, setDados }) => {
+const Tabela = ({ dados, setDados, onEntrar }) => {
     const avancar = async (idx) => {
         const d = dados[idx];
         const novoStatus = proximoStatus[d.status];
@@ -49,9 +49,9 @@ const Tabela = ({ dados, setDados }) => {
                             <div className="tabela-cell tabela-cell-center">
                                 <button
                                     className="tabela-action-btn"
-                                    onClick={() => avancar(i)}
-                                    disabled={d.status === "Finalizado"}
+                                    onClick={() => onEntrar(d.id_participante)}
                                 >
+
                                     Entrar
                                 </button>
                             </div>
