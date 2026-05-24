@@ -1,8 +1,8 @@
 import Sidebar from "./principal/painel/Painel";
 import Toolbar from "./principal/barradeferramentas/BarradeFerramentas";
 import Tabela from "./principal/campos_inscricoes/Campos";
-import PaginaParticipante from "./secundario/barradeferramentas/BarradeF";
 import { useState, useEffect } from "react";
+import PaginaParticipante from "./secundario/components/participante/PaginaParticipante";
 
 const App = () => {
   const [dados, setDados] = useState([]);
@@ -30,7 +30,6 @@ const App = () => {
     return passaFiltro && passaBusca;
   });
 
-  // Se tem participante selecionado, mostra a página dele
   if (participanteSelecionado) {
     return (
       <PaginaParticipante
