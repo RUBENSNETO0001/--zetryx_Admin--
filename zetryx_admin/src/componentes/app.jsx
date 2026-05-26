@@ -4,6 +4,7 @@ import Tabela from "./principal/campos_inscricoes/Campos";
 import { useState, useEffect } from "react";
 import PaginaParticipante from "./secundario/components/participante/PaginaParticipante";
 
+
 const App = () => {
   const [dados, setDados] = useState([]);
   const [filtro, setFiltro] = useState("Todos");
@@ -43,7 +44,7 @@ const App = () => {
     <div style={{ display: "flex", height: "100vh" }}>
       <Sidebar ativo={filtro} setAtivo={setFiltro} contagens={contagens} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <Toolbar onBusca={setBusca} onExportar={() => {}} />
+        <Toolbar onBusca={setBusca} onExportar={() => { }} />
         <Tabela
           dados={dadosFiltrados}
           setDados={setDados}

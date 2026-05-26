@@ -513,3 +513,154 @@ body {
   color: #b0b4c4;
   padding: 8px 0;
 }
+
+/* ── DOCUMENTOS (análise) ────────────────────────────────────── */
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.doc-card-analise {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 0.5px solid #e2e4e9;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fafafa;
+  transition: border-color 0.15s;
+}
+.doc-card-analise:hover {
+  border-color: #c0c4d0;
+}
+
+.doc-preview {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 0.5px solid #e2e4e9;
+  display: block;
+}
+
+.doc-sem-preview {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: #f0f1f4;
+  border-radius: 6px;
+}
+
+.doc-nome {
+  font-size: 12px;
+  font-weight: 500;
+  color: #3a3f52;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-acoes {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-status {
+  flex: 1;
+  border-radius: 7px;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 0.5px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-aprovar {
+  background: #f0faf5;
+  border-color: #a3d9b8;
+  color: #1a6e42;
+}
+.btn-aprovar:hover,
+.btn-aprovar.ativo {
+  background: #0d6e46;
+  border-color: #0d6e46;
+  color: #ffffff;
+}
+
+.btn-recusar {
+  background: #fff0f0;
+  border-color: #f5b3b3;
+  color: #a32d2d;
+}
+.btn-recusar:hover,
+.btn-recusar.ativo {
+  background: #a32d2d;
+  border-color: #a32d2d;
+  color: #ffffff;
+}
+
+.doc-justificativa {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  animation: fadeIn 0.15s ease;
+}
+
+.doc-justificativa label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #8a8fa3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.doc-justificativa textarea {
+  border: 0.5px solid #d0d3db;
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: #1a1a1a;
+  background: #ffffff;
+  resize: vertical;
+  min-height: 70px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.doc-justificativa textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.btn-enviar-analise {
+  width: 100%;
+  background: #6366f1;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn-enviar-analise:hover:not(:disabled) {
+  background: #4f52c9;
+}
+.btn-enviar-analise:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-enviar-analise.salvo {
+  background: #0d6e46;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

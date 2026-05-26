@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import mysql.connector.pooling
 import os
@@ -8,7 +8,8 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', './uploads')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/home/ruren/Documentos/GitHub/Zetryx/backend/uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 DB_CONFIG = {
@@ -27,6 +28,11 @@ db_pool = mysql.connector.pooling.MySQLConnectionPool(
 
 def get_db():
     return db_pool.get_connection()
+
+@app.route('/uploads/<path:filename>', methods=['GET'])
+def servir_upload(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 @app.route('/api/participantes', methods=['GET'])
 def listar_participantes():
@@ -51,6 +57,7 @@ def listar_participantes():
         cursor.close()
         conn.close()
 
+
 @app.route('/api/participantes/<int:id>/status', methods=['PATCH'])
 def atualizar_status(id):
     data = request.get_json()
@@ -74,52 +81,153 @@ def atualizar_status(id):
         cursor.close()
         conn.close()
 
+
+@app.route('/api/participantes/<int:id>/completo', methods=['GET'])
+def participante_completo(id):
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM Participante WHERE id_participante = %s", (id,))
+        participante = cursor.fetchone()
+        if not participante:
+            return jsonify({"error": "Não encontrado"}), 404
+
+        cursor.execute("SELECT * FROM Endereco_participante WHERE id_participante = %s", (id,))
+        endereco = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM Curso WHERE id_participante = %s", (id,))
+        curso = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM Matricula WHERE id_participante = %s", (id,))
+        matricula = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM Dados_Socioeconomicos WHERE id_participante = %s", (id,))
+        socio = cursor.fetchone()
+
+        beneficios = None
+        if socio:
+            cursor.execute("SELECT * FROM Participante_Beneficios WHERE id_socio = %s", (socio['id_socio'],))
+            beneficios = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM perfil_declaracao WHERE id_participante = %s", (id,))
+        declaracoes = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM Perfil_requisitos WHERE id_participante = %s", (id,))
+        requisitos = cursor.fetchone()
+
+        cursor.execute("""
+            SELECT
+                mf.id_membro, mf.nome, mf.parentesco, mf.data_nascimento,
+                mp.profissao, mp.vinculo_empregaticio,
+                mr.renda_mensal,
+                ms.possui_deficiencia, ms.possui_doenca_cronica
+            FROM Membros_Familia mf
+            LEFT JOIN Membro_Profissional mp ON mp.id_membro = mf.id_membro
+            LEFT JOIN Membro_Renda mr ON mr.id_membro = mf.id_membro
+            LEFT JOIN Membro_Saude ms ON ms.id_membro = mf.id_membro
+            WHERE mf.id_participante = %s
+        """, (id,))
+        membros = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT db.*, bo.nome_instituicao
+            FROM Dados_Bancarios db
+            JOIN Banco_Oficiais bo ON bo.id_bancoOf = db.id_bancoOf
+            WHERE db.id_participante = %s
+        """, (id,))
+        bancario = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM Pdf_Participante WHERE id_participante = %s", (id,))
+        docs_raw = cursor.fetchall()
+        documentos = []
+        for d in docs_raw:
+            caminho = d.get('url_imagemDocumento') or ''
+            nome_arquivo = os.path.basename(caminho)
+            documentos.append({
+                **d,
+                'url': f"http://localhost:5000/{nome_arquivo}" if nome_arquivo else None,
+        })
+        return jsonify({
+            "participante": participante,
+            "endereco": endereco,
+            "curso": curso,
+            "matricula": matricula,
+            "socioeconomico": socio,
+            "beneficios": beneficios,
+            "declaracoes": declaracoes,
+            "requisitos": requisitos,
+            "membros": membros,
+            "bancario": bancario,
+            "documentos": documentos,
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/api/documentos/<int:id>/validacao', methods=['PATCH', 'OPTIONS'])
+def validar_documento(id):
+    if request.method == 'OPTIONS':
+        return '', 204
+    data = request.get_json()
+    status = data.get('status')
+    justificativa = data.get('justificativa', '')
+
+    if status not in ('aprovado', 'recusado'):
+        return jsonify({"error": "Status inválido. Use 'aprovado' ou 'recusado'"}), 400
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE Pdf_Participante
+            SET status_validacao = %s, justificativa_rejeicao = %s
+            WHERE id_pdf = %s
+        """, (status, justificativa if status == 'recusado' else None, id))
+        conn.commit()
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Documento não encontrado"}), 404
+        return jsonify({"ok": True}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 def calcular_pontuacao(id_participante, conn):
     cursor = conn.cursor(dictionary=True)
 
-    # renda per capita
     cursor.execute("SELECT renda_per_capita FROM Perfil_requisitos WHERE id_participante = %s", (id_participante,))
     req = cursor.fetchone()
     renda = float(req['renda_per_capita']) if req and req['renda_per_capita'] else None
-    if renda is None:
-        pts_renda = 0
-    elif renda <= 202:
-        pts_renda = 40
-    elif renda <= 404:
-        pts_renda = 35
-    elif renda <= 607:
-        pts_renda = 30
-    elif renda <= 809:
-        pts_renda = 25
-    elif renda <= 1011:
-        pts_renda = 20
-    elif renda <= 1213:
-        pts_renda = 15
-    elif renda <= 1415:
-        pts_renda = 10
-    elif renda <= 1621:
-        pts_renda = 5
-    else:
-        pts_renda = 0
+    if renda is None:       pts_renda = 0
+    elif renda <= 202:      pts_renda = 40
+    elif renda <= 404:      pts_renda = 35
+    elif renda <= 607:      pts_renda = 30
+    elif renda <= 809:      pts_renda = 25
+    elif renda <= 1011:     pts_renda = 20
+    elif renda <= 1213:     pts_renda = 15
+    elif renda <= 1415:     pts_renda = 10
+    elif renda <= 1621:     pts_renda = 5
+    else:                   pts_renda = 0
 
-    # escolaridade pública
     pts_escolaridade = 40 if req and req.get('escolaridade') == 'publica' else 0
 
-    # declarações
     cursor.execute("SELECT * FROM perfil_declaracao WHERE id_participante = %s", (id_participante,))
     decl = cursor.fetchone() or {}
-    pts_lei_cotas = 40 if decl.get('lei_cotas') else 0
+    pts_lei_cotas               = 40 if decl.get('lei_cotas') else 0
     pts_deficiencia_participante = 40 if decl.get('possui_deficiencia') else 0
-    pts_quilombola = 40 if decl.get('origem_quilombola') else 0
-    pts_estrangeiro = 40 if decl.get('estrangeiro') else 0
+    pts_quilombola              = 40 if decl.get('origem_quilombola') else 0
+    pts_estrangeiro             = 40 if decl.get('estrangeiro') else 0
 
-    # aluguel/financiamento
     cursor.execute("SELECT tipo_moradia, mora_em FROM Dados_Socioeconomicos WHERE id_participante = %s", (id_participante,))
     socio = cursor.fetchone() or {}
-    pts_aluguel = 10 if socio.get('tipo_moradia') == 'alugada_financiada' else 0
+    pts_aluguel    = 10 if socio.get('tipo_moradia') == 'alugada_financiada' else 0
     pts_zona_rural = 10 if socio.get('mora_em') == 'rural' else 0
 
-    # saúde dos membros da família
     cursor.execute("""
         SELECT ms.possui_deficiencia, ms.possui_doenca_cronica
         FROM Membro_Saude ms
@@ -127,10 +235,9 @@ def calcular_pontuacao(id_participante, conn):
         WHERE mf.id_participante = %s
     """, (id_participante,))
     saudes = cursor.fetchall()
-    pts_deficiencia_familia = 10 if any(s['possui_deficiencia'] for s in saudes) else 0
+    pts_deficiencia_familia    = 10 if any(s['possui_deficiencia'] for s in saudes) else 0
     pts_doenca_cronica_familia = 10 if any(s['possui_doenca_cronica'] for s in saudes) else 0
 
-    # benefícios sociais
     cursor.execute("""
         SELECT pb.recebe_auxilio_bolsa, pb.beneficiario_bolsa_familia_cadunico, pb.recebe_bpc
         FROM Participante_Beneficios pb
@@ -145,7 +252,6 @@ def calcular_pontuacao(id_participante, conn):
     ) else 0
 
     cursor.close()
-
     return {
         'pts_renda': pts_renda,
         'pts_escolaridade': pts_escolaridade,
@@ -160,18 +266,14 @@ def calcular_pontuacao(id_participante, conn):
         'pts_beneficio_social': pts_beneficio_social,
     }
 
+
 def classificar(total):
-    if total >= 219:
-        return 'Vulnerabilidade I'
-    elif total >= 146:
-        return 'Vulnerabilidade II'
-    elif total >= 73:
-        return 'Vulnerabilidade III'
-    else:
-        return 'Não prioritário'
+    if total >= 219:   return 'Vulnerabilidade I'
+    elif total >= 146: return 'Vulnerabilidade II'
+    elif total >= 73:  return 'Vulnerabilidade III'
+    else:              return 'Não prioritário'
 
 
-# GET — busca pontuação atual do participante
 @app.route('/api/participantes/<int:id>/pontuacao', methods=['GET'])
 def get_pontuacao(id):
     try:
@@ -180,7 +282,6 @@ def get_pontuacao(id):
         cursor.execute("SELECT * FROM Pontuacao_Participante WHERE id_participante = %s", (id,))
         row = cursor.fetchone()
         if not row:
-            # calcula automaticamente se ainda não existe
             pts = calcular_pontuacao(id, conn)
             subtotal = sum(pts.values())
             total = subtotal
@@ -211,7 +312,6 @@ def get_pontuacao(id):
         conn.close()
 
 
-# PATCH — analista salva ajuste manual
 @app.route('/api/participantes/<int:id>/pontuacao', methods=['PATCH'])
 def salvar_ajuste(id):
     data = request.get_json()
@@ -219,13 +319,10 @@ def salvar_ajuste(id):
     obs = data.get('observacao_ajuste', '')
     try:
         conn = get_db()
-
-        # recalcula automático
         pts = calcular_pontuacao(id, conn)
         subtotal = sum(pts.values())
         total = subtotal + ajuste
         classif = classificar(total)
-
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Pontuacao_Participante
@@ -241,93 +338,6 @@ def salvar_ajuste(id):
         cursor.close()
         conn.close()
 
-# Adicionar no app.py
 
-@app.route('/api/participantes/<int:id>/completo', methods=['GET'])
-def participante_completo(id):
-    try:
-        conn = get_db()
-        cursor = conn.cursor(dictionary=True)
-
-        # participante
-        cursor.execute("SELECT * FROM Participante WHERE id_participante = %s", (id,))
-        participante = cursor.fetchone()
-        if not participante:
-            return jsonify({"error": "Não encontrado"}), 404
-
-        # endereço
-        cursor.execute("SELECT * FROM Endereco_participante WHERE id_participante = %s", (id,))
-        endereco = cursor.fetchone()
-
-        # curso e matrícula
-        cursor.execute("SELECT * FROM Curso WHERE id_participante = %s", (id,))
-        curso = cursor.fetchone()
-
-        cursor.execute("SELECT * FROM Matricula WHERE id_participante = %s", (id,))
-        matricula = cursor.fetchone()
-
-        # socioeconômico
-        cursor.execute("SELECT * FROM Dados_Socioeconomicos WHERE id_participante = %s", (id,))
-        socio = cursor.fetchone()
-
-        # benefícios
-        beneficios = None
-        if socio:
-            cursor.execute("SELECT * FROM Participante_Beneficios WHERE id_socio = %s", (socio['id_socio'],))
-            beneficios = cursor.fetchone()
-
-        # declarações
-        cursor.execute("SELECT * FROM perfil_declaracao WHERE id_participante = %s", (id,))
-        declaracoes = cursor.fetchone()
-
-        # perfil requisitos
-        cursor.execute("SELECT * FROM Perfil_requisitos WHERE id_participante = %s", (id,))
-        requisitos = cursor.fetchone()
-
-        # membros da família com saúde, renda e profissão
-        cursor.execute("""
-            SELECT
-                mf.id_membro, mf.nome, mf.parentesco, mf.data_nascimento,
-                mp.profissao, mp.vinculo_empregaticio,
-                mr.renda_mensal,
-                ms.possui_deficiencia, ms.possui_doenca_cronica
-            FROM Membros_Familia mf
-            LEFT JOIN Membro_Profissional mp ON mp.id_membro = mf.id_membro
-            LEFT JOIN Membro_Renda mr ON mr.id_membro = mf.id_membro
-            LEFT JOIN Membro_Saude ms ON ms.id_membro = mf.id_membro
-            WHERE mf.id_participante = %s
-        """, (id,))
-        membros = cursor.fetchall()
-
-        # dados bancários
-        cursor.execute("""
-            SELECT db.*, bo.nome_instituicao
-            FROM Dados_Bancarios db
-            JOIN Banco_Oficiais bo ON bo.id_bancoOf = db.id_bancoOf
-            WHERE db.id_participante = %s
-        """, (id,))
-        bancario = cursor.fetchone()
-
-        # documentos
-        cursor.execute("SELECT * FROM Pdf_Participante WHERE id_participante = %s", (id,))
-        documentos = cursor.fetchall()
-
-        return jsonify({
-            "participante": participante,
-            "endereco": endereco,
-            "curso": curso,
-            "matricula": matricula,
-            "socioeconomico": socio,
-            "beneficios": beneficios,
-            "declaracoes": declaracoes,
-            "requisitos": requisitos,
-            "membros": membros,
-            "bancario": bancario,
-            "documentos": documentos,
-        }), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

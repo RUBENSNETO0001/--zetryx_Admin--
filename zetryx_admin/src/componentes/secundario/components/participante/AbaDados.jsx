@@ -156,21 +156,7 @@ const AbaDados = ({ dados }) => {
           <Campo label="Variação poupança" valor={bancario?.variacao_poupanca} />
         </div>
       </Secao>
- 
-      <Secao titulo="Documentos Anexados">
-        {documentos?.length === 0 ? (
-          <p className="vazio">Nenhum documento anexado.</p>
-        ) : (
-          <div className="docs-grid">
-            {documentos?.map((d, i) => (
-              <div key={i} className="doc-card">
-                <span className="doc-icone">📄</span>
-                <span className="doc-nome">{d.titulo_do_pdf}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Secao>
+
     </div>
   );
 };
