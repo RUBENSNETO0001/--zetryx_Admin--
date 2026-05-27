@@ -120,14 +120,18 @@ const AbaDocumentos = ({ documentos = [], participanteId }) => {
               const foiSalvo = salvos[docId];
               const estaSalvando = salvando[docId];
 
+              // Extrai só o nome do arquivo e monta a URL correta do Flask
+              const nomeArquivo = (d.url || '').split('/').pop();
+              const urlFinal = nomeArquivo ? `${API}/uploads/${nomeArquivo}` : null;
+
               return (
                 <div key={docId} className="doc-card-analise">
-                  {d.url ? (
+                  {urlFinal ? (
                     <img
-                      src={d.url}
+                      src={urlFinal}
                       alt={d.titulo_do_pdf}
                       className="doc-preview"
-                      onClick={() => setImagemAmpliada({ url: d.url, titulo: d.titulo_do_pdf })}
+                      onClick={() => setImagemAmpliada({ url: urlFinal, titulo: d.titulo_do_pdf })}
                       onError={(e) => { e.currentTarget.style.display = "none"; }}
                       style={{ cursor: "zoom-in" }}
                     />

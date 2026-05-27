@@ -8,9 +8,15 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/home/ruren/Documentos/GitHub/Zetryx/backend/uploads')
+# Caminho relativo ao próprio app.py — funciona em qualquer máquina
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/home/ruren/Documentos/GitHub/uploads')
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# Garante que a pasta uploads existe
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DB_CONFIG = {
     "host":     os.getenv("DB_HOST", "localhost"),
@@ -28,6 +34,7 @@ db_pool = mysql.connector.pooling.MySQLConnectionPool(
 
 def get_db():
     return db_pool.get_connection()
+
 
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def servir_upload(filename):
@@ -143,11 +150,11 @@ def participante_completo(id):
         documentos = []
         for d in docs_raw:
             caminho = d.get('url_imagemDocumento') or ''
-            nome_arquivo = os.path.basename(caminho)
             documentos.append({
                 **d,
-                'url': f"http://localhost:5000/{nome_arquivo}" if nome_arquivo else None,
-        })
+                'url': f"{caminho}" if caminho else None,
+            })
+
         return jsonify({
             "participante": participante,
             "endereco": endereco,
@@ -167,6 +174,7 @@ def participante_completo(id):
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route('/api/documentos/<int:id>/validacao', methods=['PATCH', 'OPTIONS'])
 def validar_documento(id):
@@ -197,10 +205,11 @@ def validar_documento(id):
         cursor.close()
         conn.close()
 
+
 def calcular_pontuacao(id_participante, conn):
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT renda_per_capita FROM Perfil_requisitos WHERE id_participante = %s", (id_participante,))
+    cursor.execute("SELECT renda_per_capita, escolaridade FROM Perfil_requisitos WHERE id_participante = %s", (id_participante,))
     req = cursor.fetchone()
     renda = float(req['renda_per_capita']) if req and req['renda_per_capita'] else None
     if renda is None:       pts_renda = 0
@@ -218,10 +227,10 @@ def calcular_pontuacao(id_participante, conn):
 
     cursor.execute("SELECT * FROM perfil_declaracao WHERE id_participante = %s", (id_participante,))
     decl = cursor.fetchone() or {}
-    pts_lei_cotas               = 40 if decl.get('lei_cotas') else 0
+    pts_lei_cotas                = 40 if decl.get('lei_cotas') else 0
     pts_deficiencia_participante = 40 if decl.get('possui_deficiencia') else 0
-    pts_quilombola              = 40 if decl.get('origem_quilombola') else 0
-    pts_estrangeiro             = 40 if decl.get('estrangeiro') else 0
+    pts_quilombola               = 40 if decl.get('origem_quilombola') else 0
+    pts_estrangeiro              = 40 if decl.get('estrangeiro') else 0
 
     cursor.execute("SELECT tipo_moradia, mora_em FROM Dados_Socioeconomicos WHERE id_participante = %s", (id_participante,))
     socio = cursor.fetchone() or {}
