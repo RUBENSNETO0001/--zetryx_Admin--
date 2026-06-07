@@ -8,14 +8,15 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-# Caminho relativo ao próprio app.py — funciona em qualquer máquina
+
+from exportar import exportar_bp      
+app.register_blueprint(exportar_bp) 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/home/ruren/Documentos/GitHub/uploads')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-# Garante que a pasta uploads existe
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DB_CONFIG = {

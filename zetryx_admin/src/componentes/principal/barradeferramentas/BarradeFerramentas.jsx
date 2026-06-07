@@ -1,13 +1,23 @@
 import "./style.css";
-
-const Barradeferramentas = ({ onExportar, onBusca }) => {
+ 
+const API_URL = "http://localhost:5000";
+ 
+const Barradeferramentas = ({ onBusca }) => {
+  const handleExportar = () => {
+    window.open(`${API_URL}/api/participantes/exportar`, "_blank");
+  };
+ 
   return (
     <div className="toolbar-root">
-      <button className="toolbar-btn toolbar-btn-outline" onClick={onExportar}>
+      <button
+        className="toolbar-btn toolbar-btn-outline"
+        onClick={handleExportar}
+        title="Exportar todos os participantes em Excel"
+      >
         ⬇ Exportar
       </button>
     </div>
   );
 };
-
+ 
 export default Barradeferramentas;
