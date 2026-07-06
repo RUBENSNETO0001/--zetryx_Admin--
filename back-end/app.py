@@ -284,6 +284,13 @@ def classificar(total):
     else:              return 'Não prioritário'
 
 
+PONTUACAO_MAX = 290
+PONTUACAO_MIN = 0
+ 
+ 
+def clamp_total(total):
+    return max(PONTUACAO_MIN, min(total, PONTUACAO_MAX))
+
 @app.route('/api/participantes/<int:id>/pontuacao', methods=['GET'])
 def get_pontuacao(id):
     try:
@@ -331,7 +338,7 @@ def salvar_ajuste(id):
         conn = get_db()
         pts = calcular_pontuacao(id, conn)
         subtotal = sum(pts.values())
-        total = subtotal + ajuste
+        total = clamp_total(subtotal + ajuste)
         classif = classificar(total)
         cursor = conn.cursor()
         cursor.execute("""

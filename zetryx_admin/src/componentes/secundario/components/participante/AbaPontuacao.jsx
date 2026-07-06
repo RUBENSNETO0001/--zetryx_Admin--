@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { criterios, classifColor } from "../../constants/pontuacao";
 
 const API = "http://localhost:5000";
+const PONTUACAO_MAX = 290;
+
+const clampTotal = (valor) => Math.min(Math.max(valor ?? 0, 0), PONTUACAO_MAX);
 
 const AbaPontuacao = ({ id }) => {
   const [pont, setPont] = useState(null);
@@ -13,7 +16,7 @@ const AbaPontuacao = ({ id }) => {
     fetch(`${API}/api/participantes/${id}/pontuacao`)
       .then((r) => r.json())
       .then((data) => {
-        setPont(data);
+        setPont({ ...data, pontuacao_total: clampTotal(data.pontuacao_total) });
         setAjuste(data.ajuste_manual ?? 0);
         setObs(data.observacao_ajuste ?? "");
       });
@@ -32,7 +35,7 @@ const AbaPontuacao = ({ id }) => {
     const data = await res.json();
     setPont((prev) => ({
       ...prev,
-      pontuacao_total: data.pontuacao_total,
+      pontuacao_total: clampTotal(data.pontuacao_total),
       classificacao: data.classificacao,
       ajuste_manual: Number(ajuste),
     }));
