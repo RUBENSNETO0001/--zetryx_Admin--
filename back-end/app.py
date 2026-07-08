@@ -12,7 +12,7 @@ CORS(app)
 from exportar import exportar_bp      
 app.register_blueprint(exportar_bp) 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/home/ruren/Documentos/GitHub/uploads')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/home/ruren/uploads')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
