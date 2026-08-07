@@ -4,15 +4,17 @@ import mysql.connector.pooling
 import os
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 app = Flask(__name__)
 CORS(app)
 
+caminho_uploads = Path.home() / "uploads"
 
 from exportar import exportar_bp      
 app.register_blueprint(exportar_bp) 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', '/home/ruren/uploads')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', caminho_uploads := Path(BASE_DIR) / "uploads")
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
