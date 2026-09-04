@@ -23,6 +23,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DB_CONFIG = {
     "host":     os.getenv("DB_HOST", "localhost"),
+    "port":     int(os.getenv("DB_PORT", 3306)),
     "user":     os.getenv("DB_USER", "root"),
     "password": os.getenv("DB_PASSWORD", ""),
     "database": os.getenv("DB_NAME", "Sistema_zetryx"),
@@ -359,4 +360,6 @@ def salvar_ajuste(id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    porta = int(os.getenv("PORT", 5000))
+    debug_mode = os.getenv("FLASK_DEBUG", "true").lower() == "true"
+    app.run(host="0.0.0.0", debug=debug_mode, port=porta)
