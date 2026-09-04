@@ -9,7 +9,7 @@ from pathlib import Path
 app = Flask(__name__)
 
 # Configuração de CORS para permitir origens do .env
-origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173, https://zetryx-admin.netlify.app/").split(",")
 CORS(app, origins=[o.strip() for o in origins])
 
 caminho_uploads = Path.home() / "uploads"
@@ -25,10 +25,10 @@ app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_UPLOAD_MB', 16)) * 1024 * 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DB_CONFIG = {
-    "host":     os.getenv("DB_HOST", "localhost"),
+    "host":     os.getenv("DB_HOST", "mysql.railway.internal"),
     "port":     int(os.getenv("DB_PORT", 3306)),
     "user":     os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
+    "password": os.getenv("DB_PASSWORD", "jFOKuuIIFpfhNAFUNgiKknBrxlbCXXLv"),
     "database": os.getenv("DB_NAME", "railway"),
     "charset":  "utf8mb4",
 }
