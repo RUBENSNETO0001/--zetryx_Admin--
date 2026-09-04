@@ -7,7 +7,10 @@ from datetime import datetime
 from pathlib import Path
 
 app = Flask(__name__)
-CORS(app)
+
+# Configuração de CORS para permitir origens do .env
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+CORS(app, origins=[o.strip() for o in origins])
 
 caminho_uploads = Path.home() / "uploads"
 
@@ -17,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', caminho_uploads := Path(BASE_DIR) / "uploads")
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_UPLOAD_MB', 16)) * 1024 * 1024
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -26,17 +29,24 @@ DB_CONFIG = {
     "port":     int(os.getenv("DB_PORT", 3306)),
     "user":     os.getenv("DB_USER", "root"),
     "password": os.getenv("DB_PASSWORD", ""),
-    "database": os.getenv("DB_NAME", "Sistema_zetryx"),
+    "database": os.getenv("DB_NAME", "railway"),
     "charset":  "utf8mb4",
 }
 
-db_pool = mysql.connector.pooling.MySQLConnectionPool(
-    pool_name="zetryx_pool",
-    pool_size=5,
-    **DB_CONFIG
-)
+# Inicialização segura do pool para evitar crash na subida
+db_pool = None
+try:
+    db_pool = mysql.connector.pooling.MySQLConnectionPool(
+        pool_name="zetryx_pool",
+        pool_size=5,
+        **DB_CONFIG
+    )
+except Exception as err:
+    print(f"[AVISO] Não foi possível conectar ao banco de dados na inicialização: {err}")
 
 def get_db():
+    if not db_pool:
+        raise Exception("Pool de conexões do MySQL não está disponível. Verifique o DB_HOST no .env.")
     return db_pool.get_connection()
 
 
@@ -47,6 +57,8 @@ def servir_upload(filename):
 
 @app.route('/api/participantes', methods=['GET'])
 def listar_participantes():
+    conn = None
+    cursor = None
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -65,8 +77,8 @@ def listar_participantes():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 @app.route('/api/participantes/<int:id>/status', methods=['PATCH'])
@@ -75,6 +87,8 @@ def atualizar_status(id):
     novo_status = data.get('status')
     if novo_status not in ('Novo', 'Revisando', 'Finalizado'):
         return jsonify({"error": "Status inválido"}), 400
+    conn = None
+    cursor = None
     try:
         conn = get_db()
         cursor = conn.cursor()
@@ -89,12 +103,14 @@ def atualizar_status(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 @app.route('/api/participantes/<int:id>/completo', methods=['GET'])
 def participante_completo(id):
+    conn = None
+    cursor = None
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -176,8 +192,8 @@ def participante_completo(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 @app.route('/api/documentos/<int:id>/validacao', methods=['PATCH', 'OPTIONS'])
@@ -191,6 +207,8 @@ def validar_documento(id):
     if status not in ('aprovado', 'recusado'):
         return jsonify({"error": "Status inválido. Use 'aprovado' ou 'recusado'"}), 400
 
+    conn = None
+    cursor = None
     try:
         conn = get_db()
         cursor = conn.cursor()
@@ -206,8 +224,8 @@ def validar_documento(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 def calcular_pontuacao(id_participante, conn):
@@ -296,6 +314,8 @@ def clamp_total(total):
 
 @app.route('/api/participantes/<int:id>/pontuacao', methods=['GET'])
 def get_pontuacao(id):
+    conn = None
+    cursor = None
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -328,8 +348,8 @@ def get_pontuacao(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 @app.route('/api/participantes/<int:id>/pontuacao', methods=['PATCH'])
@@ -337,6 +357,8 @@ def salvar_ajuste(id):
     data = request.get_json()
     ajuste = data.get('ajuste_manual', 0)
     obs = data.get('observacao_ajuste', '')
+    conn = None
+    cursor = None
     try:
         conn = get_db()
         pts = calcular_pontuacao(id, conn)
@@ -355,8 +377,8 @@ def salvar_ajuste(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 
 if __name__ == '__main__':
