@@ -9,8 +9,11 @@ from pathlib import Path
 app = Flask(__name__)
 
 # Configuração de CORS para permitir origens do .env
-origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173, https://zetryx-admin.netlify.app/").split(",")
-CORS(app, origins=[o.strip() for o in origins])
+origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,https://zetryx-admin.netlify.app"
+).split(",")
+CORS(app, origins=[o.strip().rstrip("/") for o in origins], supports_credentials=True)
 
 caminho_uploads = Path.home() / "uploads"
 
