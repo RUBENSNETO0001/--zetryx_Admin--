@@ -3,20 +3,18 @@ import Toolbar from "./principal/barradeferramentas/BarradeFerramentas";
 import Tabela from "./principal/campos_inscricoes/Campos";
 import { useState, useEffect } from "react";
 import PaginaParticipante from "./secundario/components/participante/PaginaParticipante";
-
+import { API_URL } from "../config";
 
 const App = () => {
   const [dados, setDados] = useState([]);
   const [filtro, setFiltro] = useState("Todos");
   const [busca, setBusca] = useState("");
   const [participanteSelecionado, setParticipanteSelecionado] = useState(null);
-  const API_URL = import.meta.env.VITE_API_URL || 'https://zetryxadmin-production.up.railway.app';
-
 
   useEffect(() => {
     fetch(`${API_URL}/api/participantes`)
       .then(res => res.json())
-      .then(data => console.log(data))
+      .then(data => setDados(data))
       .catch(err => console.error("Erro ao buscar participantes:", err));
   }, []);
 

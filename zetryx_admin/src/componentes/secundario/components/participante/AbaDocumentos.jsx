@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Secao from "../ui/Secao";
-
-const API = "http://localhost:5000";
+import { API_URL as API } from "../../../../config";
 
 const AbaDocumentos = ({ documentos = [], participanteId }) => {
   const [validacoes, setValidacoes] = useState({});

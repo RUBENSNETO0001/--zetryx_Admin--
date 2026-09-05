@@ -2,16 +2,15 @@ import { useState, useEffect } from "react";
 import AbaDados from "./AbaDados";
 import AbaPontuacao from "./AbaPontuacao";
 import AbaDocumentos from "./AbaDocumentos";
+import { API_URL as API } from "../../../../config";
 import "../../style/style.css";
- 
-const API = "http://localhost:5000";
- 
+
 const PaginaParticipante = ({ id, onVoltar }) => {
   const [aba, setAba] = useState("dados");
   const [dados, setDados] = useState(null);
   const [status, setStatus] = useState("");
   const [carregando, setCarregando] = useState(true);
- 
+
   useEffect(() => {
     setCarregando(true);
     fetch(`${API}/api/participantes/${id}/completo`)
@@ -22,7 +21,7 @@ const PaginaParticipante = ({ id, onVoltar }) => {
       })
       .finally(() => setCarregando(false));
   }, [id]);
- 
+
   const atualizarStatus = async (novoStatus) => {
     await fetch(`${API}/api/participantes/${id}/status`, {
       method: "PATCH",
@@ -31,7 +30,7 @@ const PaginaParticipante = ({ id, onVoltar }) => {
     });
     setStatus(novoStatus);
   };
- 
+
   return (
     <div className="pagina-participante">
       <div className="pp-header">
@@ -63,7 +62,7 @@ const PaginaParticipante = ({ id, onVoltar }) => {
           </button>
         </div>
       </div>
- 
+
       <div className="pp-abas">
         <button
           className={`pp-aba ${aba === "dados" ? "ativa" : ""}`}
@@ -84,7 +83,7 @@ const PaginaParticipante = ({ id, onVoltar }) => {
           Pontuação
         </button>
       </div>
- 
+
       <div className="pp-conteudo">
         {aba === "dados" && <AbaDados dados={dados} />}
         {aba === "documentos" && (
@@ -98,5 +97,5 @@ const PaginaParticipante = ({ id, onVoltar }) => {
     </div>
   );
 };
- 
+
 export default PaginaParticipante;

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "../../../config";
 import "./style.css";
 
 const proximoStatus = { Novo: "Revisando", Revisando: "Finalizado", Finalizado: "Finalizado" };
@@ -9,7 +10,7 @@ const Tabela = ({ dados, setDados, onEntrar }) => {
     const avancar = async (idx) => {
         const d = dados[idx];
         const novoStatus = proximoStatus[d.status];
-        await fetch(`http://localhost:5000/api/participantes/${d.id_participante}/status`, {
+        await fetch(`${API_URL}/api/participantes/${d.id_participante}/status`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: novoStatus }),

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { criterios, classifColor } from "../../constants/pontuacao";
+import { API_URL as API } from "../../../../config";
 
-const API = "http://localhost:5000";
 const PONTUACAO_MAX = 290;
 
 const clampTotal = (valor) => Math.min(Math.max(valor ?? 0, 0), PONTUACAO_MAX);
