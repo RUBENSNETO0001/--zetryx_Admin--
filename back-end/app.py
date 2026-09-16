@@ -8,7 +8,6 @@ from pathlib import Path
 
 app = Flask(__name__)
 
-# Configuração de CORS para permitir origens do .env
 origins = os.getenv(
     "ALLOWED_ORIGINS",
     "http://localhost:5173,https://zetryx-admin.netlify.app"
@@ -36,7 +35,6 @@ DB_CONFIG = {
     "charset":  "utf8mb4",
 }
 
-# Inicialização segura do pool para evitar crash na subida
 db_pool = None
 try:
     db_pool = mysql.connector.pooling.MySQLConnectionPool(
@@ -83,7 +81,6 @@ def listar_participantes():
         if cursor: cursor.close()
         if conn: conn.close()
 
-
 @app.route('/api/participantes/<int:id>/status', methods=['PATCH'])
 def atualizar_status(id):
     data = request.get_json()
@@ -108,7 +105,6 @@ def atualizar_status(id):
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
-
 
 @app.route('/api/participantes/<int:id>/completo', methods=['GET'])
 def participante_completo(id):

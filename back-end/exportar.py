@@ -267,7 +267,6 @@ def exportar_todos():
         """)
         rows = cursor.fetchall()
 
-        # Documentos: pega até 2 por participante
         cursor.execute("""
             SELECT id_participante, titulo_do_pdf, status_validacao, justificativa_rejeicao
             FROM Pdf_Participante
