@@ -9,12 +9,10 @@ from pathlib import Path
 app = Flask(__name__)
 CORS(app)
 
-caminho_uploads = Path.home() / "uploads"
-
 from exportar import exportar_bp      
 app.register_blueprint(exportar_bp) 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', caminho_uploads := Path(BASE_DIR) / "uploads")
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', r"/home/ruren/uploads")
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -42,7 +40,6 @@ def get_db():
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def servir_upload(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
 
 @app.route('/api/participantes', methods=['GET'])
 def listar_participantes():
@@ -152,10 +149,14 @@ def participante_completo(id):
         docs_raw = cursor.fetchall()
         documentos = []
         for d in docs_raw:
-            caminho = d.get('url_imagemDocumento') or ''
+            caminho_completo = d.get('url_imagemDocumento') or ''
+            # Extrai apenas o nome do arquivo (ex: "foto.png") caso esteja salvo com o caminho completo
+            nome_arquivo = os.path.basename(caminho_completo)
+            
             documentos.append({
                 **d,
-                'url': f"{caminho}" if caminho else None,
+                # Monta a URL completa apontando para a rota de uploads do Flask
+                'url': f"http://localhost:5000/uploads/{nome_arquivo}" if nome_arquivo else None,
             })
 
         return jsonify({

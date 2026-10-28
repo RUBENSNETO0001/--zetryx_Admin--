@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Secao from "../ui/Secao";
-
 const API = "http://localhost:5000";
+const linktemporario = "/home/ruren/uploads/";
 
 const AbaDocumentos = ({ documentos = [], participanteId }) => {
   const [validacoes, setValidacoes] = useState({});
@@ -121,8 +121,7 @@ const AbaDocumentos = ({ documentos = [], participanteId }) => {
               const estaSalvando = salvando[docId];
 
               // Extrai só o nome do arquivo e monta a URL correta do Flask
-              const nomeArquivo = (d.url || '').split('/').pop();
-              const urlFinal = nomeArquivo ? `${API}/uploads/${nomeArquivo}` : null;
+              const urlFinal = d.url;
 
               return (
                 <div key={docId} className="doc-card-analise">
